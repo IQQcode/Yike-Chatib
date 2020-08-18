@@ -27,7 +27,7 @@
     <script src="./js/common.variate.js"></script>
     <link rel="stylesheet" type="text/css" href="./css/csshake.min.css">
 
-    <link rel="icon" href="icon/yike.ico" type="image/x-icon">
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon">
 
 </head>
 
@@ -245,6 +245,7 @@
         } else {
             a = a + '">';
         }
+        //jQuery 将消息追加渲染
         $("#message").append("<div class='sendUser'><b>" + nick + "</b></div>" + a + msg + b);
         scrollToEnd();
         $(".botui-message-content").animate({'margin-left': '0px'}, 200);
@@ -258,6 +259,7 @@
         } else {
             c = c + '">';
         }
+        //jQuery 将消息追加渲染
         $("#message").append("<div class='sendUser' style='text-align: right;'><b>" + nick + "</b></div>" + c + msg + b);
         scrollToEnd();
         $(".botui-message-content2").animate({'margin-right': '0px'}, 200);
@@ -606,7 +608,10 @@
         }]
     })
 
-
+    /**
+     * 发送图片
+     * @param obj
+     */
     function sendImg(obj) {
         var file = document.getElementById("imageUp");
         var image = document.getElementById("image");

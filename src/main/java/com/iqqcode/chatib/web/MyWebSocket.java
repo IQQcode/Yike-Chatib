@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.websocket.OnError;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
+import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.*;
@@ -70,13 +67,6 @@ public class MyWebSocket {
         result.put("sendUser", "系统消息");
         result.put("id", session.getId());
         this.sendMessage(gson.toJson((result)));
-    }
-
-    /**
-     * 关闭连接之后调用的方法
-     */
-    public void onclose() {
-
     }
 
     /**
@@ -149,13 +139,72 @@ public class MyWebSocket {
     }
 
     /**
+     * 关闭连接之后调用的方法
+     * 从容器中删除指定用户
+     */
+    @OnClose
+    public void onClose() {
+        subOnlineCount();
+        //从session中获取到该用户
+        CopyOnWriteArraySet<User> users = getUsers(session);
+        if (users!=null){
+            String nick = "某人";
+            for (User user : users) {
+                if (user.getId().equals(session.getId())){
+                    nick = user.getNickname();
+                }
+            }
+            //系统消息广播
+            Map<String,String> result = new HashMap<>();
+            result.put("type","init");
+            result.put("msg",nick+"离开房间");
+            result.put("sendUser","系统消息");
+            sendMessagesOther(users,gson.toJson(result));
+            //users用户列表中删除该用户
+            User closeUser = getUser(session);
+            users.remove(closeUser);
+            //逻辑判断,如果当前Room无用户，则自动关闭
+            if (users.size() == 0){
+                String room = RoomForUser.get(session.getId());
+                UserForRoom.remove(room);
+                PwdForRoom.remove(room);
+            }
+            RoomForUser.remove(session.getId());
+        }
+    }
+
+    /**
      * 连接发生错误时的调用方法
      * @param session
      * @param error
      */
     @OnError
     public void onError(Session session, Throwable error) {
-
+        logger.debug("---------------------与{}的连接发生错误---------------------", session.getId());
+        subOnlineCount();
+        CopyOnWriteArraySet<User> users = getUsers(session);
+        if (users != null) {
+            String nick = "某人";
+            for (User user : users) {
+                if (user.getId().equals(session.getId())) {
+                    nick = user.getNickname();
+                }
+            }
+            Map<String, String> result = new HashMap<>();
+            result.put("type", "init");
+            result.put("msg", nick + "离开房间");
+            result.put("sendUser", "系统消息");
+            sendMessagesOther(users, gson.toJson(result));
+            User closeUser = getUser(session);
+            users.remove(closeUser);
+            if (users.size() == 0) {
+                String room = RoomForUser.get(session.getId());
+                UserForRoom.remove(room);
+                PwdForRoom.remove(room);
+            }
+            RoomForUser.remove(session.getId());
+        }
+        error.printStackTrace();
     }
 
 
@@ -178,7 +227,6 @@ public class MyWebSocket {
 
     /**
      * 文本消息发送
-     *
      * @param message
      * @throws IOException
      */
@@ -216,7 +264,7 @@ public class MyWebSocket {
 
 
     /**
-     * 给room内所有用户群发信息
+     * 给room内用户群发信息(除自己外)
      * @param users 用户集合
      * @param message 消息数据(无表情)
      */
@@ -234,9 +282,8 @@ public class MyWebSocket {
         }
     }
 
-
     /**
-     * 给room内所有用户群发信息
+     * 给room内所有用户群发信息(除自己外)
      * @param users 用户集合
      * @param message 消息数据
      * @param shiel 表情字符串
@@ -253,6 +300,22 @@ public class MyWebSocket {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+        }
+    }
+
+    /**
+     * 给房间的所有人发送消息
+     * @param users
+     * @param message
+     */
+    private void sendMessagesAll(CopyOnWriteArraySet<User> users, String message){
+        //群发消息
+        for (User item : users) {
+            try {
+                item.getWebSocket().sendMessage(message);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
