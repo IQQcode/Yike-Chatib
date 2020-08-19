@@ -12,8 +12,9 @@
     <artifactId>yike_chatib</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
+
     <name>yike_chatib</name>
-    <description>Demo project for Spring Boot</description>
+    <description>yike_chatib online chat room</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

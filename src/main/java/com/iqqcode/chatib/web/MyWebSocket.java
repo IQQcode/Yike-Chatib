@@ -19,8 +19,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @Date: 2020-08-17 22:39
  * @Description:服务端通信
  */
-@ServerEndpoint(value = "/websocket")
 @Component
+@ServerEndpoint(value = "/websocket")
 public class MyWebSocket {
     //打印日志信息
     private static final Logger logger = LoggerFactory.getLogger(MyWebSocket.class);
@@ -77,8 +77,7 @@ public class MyWebSocket {
     @OnMessage
     public void onMessage(String message, Session session) {
         //将json-message转为message对象
-        Map<String, String> map = new Gson().fromJson(message, new TypeToken<HashMap<String, String>>() {
-        }.getType());
+        Map<String, String> map = new Gson().fromJson(message, new TypeToken<HashMap<String, String>>(){}.getType());
         //容器来保存转换后的数据
         Map<String, String> result = new HashMap<>();
         User user = null;
