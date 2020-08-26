@@ -1,0 +1,18 @@
+
+Hope you enjoy your new logo, here are the people that
+made your beautiful logo happen :)
+font name: Prociono
+font link: https://fonts.google.com/specimen/Prociono
+font author: Barry Schwartz
+font author site: http://crudfactory.com/
+Slogan Font: Questrial-Regular.otf
+
+icon designer: Wilson Joseph
+icon designer link: /wilsonjoseph
+        
+
+fontColor: {"hex":"#FFDF2A"}
+bgColor: {"hex":"transparent"}
+iconColor: {"hex":"#FFDF2A"}
+sloganColor: {"hex":"#000000"}
+      
