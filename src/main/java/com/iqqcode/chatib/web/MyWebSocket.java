@@ -12,6 +12,7 @@ import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -32,13 +33,13 @@ public class MyWebSocket {
     private Session session;
 
     //用以记录用户和房间号的对应关系(sessionId,room)
-    private static HashMap<String, String> RoomForUser = new HashMap<String, String>();
+    private static Map<String, String> RoomForUser = new ConcurrentHashMap<String, String>();
 
     //用以记录房间和其中用户群的对应关系(room,List<用户>)
-    public static HashMap<String, CopyOnWriteArraySet<User>> UserForRoom = new HashMap<String, CopyOnWriteArraySet<User>>();
+    public static Map<String, CopyOnWriteArraySet<User>> UserForRoom = new ConcurrentHashMap<String, CopyOnWriteArraySet<User>>();
 
     //用以记录房间和其中用户群的对应关系(room,List<用户>)
-    public static HashMap<String, String> PwdForRoom = new HashMap<String, String>();
+    public static Map<String, String> PwdForRoom = new ConcurrentHashMap <String, String>();
 
     //用来存放必应壁纸
     public static List<String> BingImages = new ArrayList<>();

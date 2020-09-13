@@ -152,7 +152,7 @@ public class SocketController {
     @RequestMapping("/allRoom")
     public Map<String,Object> allRoom(){
         Map<String,Object> result = new HashMap<>();
-        HashMap<String,CopyOnWriteArraySet<User>> userForRoom = MyWebSocket.UserForRoom;
+        Map<String,CopyOnWriteArraySet<User>> userForRoom = MyWebSocket.UserForRoom;
         List<String> rooms = new ArrayList<>();
         for (String key : userForRoom.keySet()) {
             rooms.add(key);
