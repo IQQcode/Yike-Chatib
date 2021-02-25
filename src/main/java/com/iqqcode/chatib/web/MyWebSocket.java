@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: iqqcode
@@ -27,19 +28,20 @@ public class MyWebSocket {
     private static final Logger logger = LoggerFactory.getLogger(MyWebSocket.class);
 
     //静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
-    private static int onlineCount = 0;
+    private static AtomicInteger onlineCount = new AtomicInteger();
 
+    // 声明
     //与某个客户端的连接会话，需要通过它来给指定的客户端发送数据
     private Session session;
 
-    //用以记录用户和房间号的对应关系(sessionId,room)
+    //用以记录 会话 和 房间号 的对应关系(sessionId, room)
     private static Map<String, String> RoomForUser = new ConcurrentHashMap<String, String>();
 
-    //用以记录房间和其中用户群的对应关系(room,List<用户>)
+    //用以记录 房间 和 其中用户群 的对应关系(room,List<用户>)
     public static Map<String, CopyOnWriteArraySet<User>> UserForRoom = new ConcurrentHashMap<String, CopyOnWriteArraySet<User>>();
 
-    //用以记录房间和其中用户群的对应关系(room,List<用户>)
-    public static Map<String, String> PwdForRoom = new ConcurrentHashMap <String, String>();
+    //用以记录 房间 和 其中用户群 的对应关系(room,room)
+    public static Map<String, String> PwdForRoom = new ConcurrentHashMap<String, String>();
 
     //用来存放必应壁纸
     public static List<String> BingImages = new ArrayList<>();
@@ -72,13 +74,15 @@ public class MyWebSocket {
 
     /**
      * 服务端收到客户端消息后调用的方法
+     *
      * @param message
      * @param session
      */
     @OnMessage
     public void onMessage(String message, Session session) {
         //将json-message转为message对象
-        Map<String, String> map = new Gson().fromJson(message, new TypeToken<HashMap<String, String>>(){}.getType());
+        Map<String, String> map = new Gson().fromJson(message, new TypeToken<HashMap<String, String>>() {
+        }.getType());
         //容器来保存转换后的数据
         Map<String, String> result = new HashMap<>();
         User user = null;
@@ -147,24 +151,24 @@ public class MyWebSocket {
         subOnlineCount();
         //从session中获取到该用户
         CopyOnWriteArraySet<User> users = getUsers(session);
-        if (users!=null){
+        if (users != null) {
             String nick = "某人";
             for (User user : users) {
-                if (user.getId().equals(session.getId())){
+                if (user.getId().equals(session.getId())) {
                     nick = user.getNickname();
                 }
             }
             //系统消息广播
-            Map<String,String> result = new HashMap<>();
-            result.put("type","init");
-            result.put("msg",nick+"离开房间");
-            result.put("sendUser","系统消息");
-            sendMessagesOther(users,gson.toJson(result));
+            Map<String, String> result = new HashMap<>();
+            result.put("type", "init");
+            result.put("msg", nick + "离开房间");
+            result.put("sendUser", "系统消息");
+            sendMessagesOther(users, gson.toJson(result));
             //users用户列表中删除该用户
             User closeUser = getUser(session);
             users.remove(closeUser);
             //逻辑判断,如果当前Room无用户，则自动关闭
-            if (users.size() == 0){
+            if (users.size() == 0) {
                 String room = RoomForUser.get(session.getId());
                 UserForRoom.remove(room);
                 PwdForRoom.remove(room);
@@ -175,6 +179,7 @@ public class MyWebSocket {
 
     /**
      * 连接发生错误时的调用方法
+     *
      * @param session
      * @param error
      */
@@ -210,23 +215,26 @@ public class MyWebSocket {
 
     /**
      * 在线人数统计
+     *
      * @Tips:保证同步
+     * @return
      */
-    public static synchronized int getOnlineCount() {
+    public static synchronized AtomicInteger getOnlineCount() {
         return onlineCount;
     }
 
     public static synchronized void addOnlineCount() {
-        MyWebSocket.onlineCount++;
+        MyWebSocket.onlineCount.incrementAndGet();
     }
 
     //同房间用户下线, count--
     public static synchronized void subOnlineCount() {
-        MyWebSocket.onlineCount--;
+        MyWebSocket.onlineCount.decrementAndGet();
     }
 
     /**
      * 文本消息发送
+     *
      * @param message
      * @throws IOException
      */
@@ -237,6 +245,7 @@ public class MyWebSocket {
 
     /**
      * 通过当前用户的session获取待发送的目标用户
+     *
      * @param session
      * @return
      */
@@ -253,6 +262,7 @@ public class MyWebSocket {
 
     /**
      * 通过当前用户的session获取当前room内的所有用户,存入Set
+     *
      * @param session
      * @return
      */
@@ -265,7 +275,8 @@ public class MyWebSocket {
 
     /**
      * 给room内用户群发信息(除自己外)
-     * @param users 用户集合
+     *
+     * @param users   用户集合
      * @param message 消息数据(无表情)
      */
     private void sendMessagesOther(CopyOnWriteArraySet<User> users, String message) {
@@ -284,9 +295,10 @@ public class MyWebSocket {
 
     /**
      * 给room内所有用户群发信息(除自己外)
-     * @param users 用户集合
+     *
+     * @param users   用户集合
      * @param message 消息数据
-     * @param shiel 表情字符串
+     * @param shiel   表情字符串
      */
     private void sendMessagesOther(CopyOnWriteArraySet<User> users, String message, String shiel) {
         //将存表情包字符串的数组转为List
@@ -294,7 +306,7 @@ public class MyWebSocket {
         List<String> shiels = Arrays.asList(shiel.split(","));
         //群发消息
         for (User item : users) {
-            if (item.getWebSocket() != this && !shiels.contains(item.getId())){
+            if (item.getWebSocket() != this && !shiels.contains(item.getId())) {
                 try {
                     item.getWebSocket().sendMessage(message);
                 } catch (IOException e) {
@@ -306,10 +318,11 @@ public class MyWebSocket {
 
     /**
      * 给房间的所有人发送消息
+     *
      * @param users
      * @param message
      */
-    private void sendMessagesAll(CopyOnWriteArraySet<User> users, String message){
+    private void sendMessagesAll(CopyOnWriteArraySet<User> users, String message) {
         //群发消息
         for (User item : users) {
             try {
